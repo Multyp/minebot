@@ -1,0 +1,32 @@
+{
+  "spider_farm": [
+    {
+      "coords": [
+        -135,
+        106,
+        408
+      ],
+      "looted": false
+    }
+  ],
+  "temple_des_mers": [
+    {
+      "coords": [
+        1266,
+        62,
+        729
+      ],
+      "looted": false
+    }
+  ],
+  "pillagers_tower": [
+    {
+      "coords": [
+        -3360,
+        62,
+        -1520
+      ],
+      "looted": false
+    }
+  ]
+}

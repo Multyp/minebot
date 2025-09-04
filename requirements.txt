@@ -1,0 +1,6 @@
+# Discord Bot Dependencies
+discord.py>=2.3.0
+python-dotenv>=1.0.0
+
+# Minecraft Server Status
+mcstatus>=10.0.0
