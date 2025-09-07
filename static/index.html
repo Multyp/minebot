@@ -75,7 +75,10 @@
   </template>
 
   <script>
-    const DATA_URL = '../data/locations.json'; // relative from static/
+  // Using a relative path that works after we publish "static" + "data" contents to the site root on GitHub Pages.
+  // The workflow will copy: static/* -> dist/ (root) and data/ -> dist/data/
+  // So the file will live at ./data/locations.json next to index.html.
+  const DATA_URL = './data/locations.json';
 
     const state = { raw: {}, view: 'list' };
 

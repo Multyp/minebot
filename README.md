@@ -81,6 +81,46 @@ DATA_DIR=data
 python main.py
 ```
 
+## Static Locations Viewer (GitHub Pages)
+
+This repository also publishes a static web viewer for the location data to **GitHub Pages** (served from the `static/` + `data/` directories).
+
+### How it works
+
+- GitHub Action workflow (`.github/workflows/deploy-pages.yml`) runs on each push to `main`.
+- It copies everything from `static/` into a temporary `dist/` directory root.
+- It copies `data/locations.json` to `dist/data/locations.json` so the page can fetch it with `fetch('./data/locations.json')`.
+- The site is then deployed via the official `actions/deploy-pages` action.
+
+### Enabling Pages (first time)
+1. Go to Repository Settings → Pages.
+2. Set Source to: GitHub Actions.
+3. Save.
+
+### Viewing Locally
+
+You can open `static/index.html` directly or serve it (recommended so the cache-busting query works consistently):
+
+```bash
+python -m http.server -d static 8080
+# Then open http://localhost:8080
+```
+
+Ensure `data/locations.json` is reachable at `http://localhost:8080/data/locations.json` (you may need to copy the `data` folder under `static` for local ad‑hoc serving):
+
+```bash
+cp -R data static/
+```
+
+### Updating Data
+
+Any commit that changes `data/locations.json` will redeploy automatically. The client adds a cache-busting `?_=<timestamp>` query parameter.
+
+### Custom Domains / Project Pages
+
+If this is a project page served at `https://<user>.github.io/<repo>/`, relative links (`./data/locations.json` and `./mc-background.png`) continue to work without modification.
+
+
 ## Commands
 
 ### Server Commands

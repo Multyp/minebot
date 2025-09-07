@@ -1,0 +1,44 @@
+name: Deploy Static Site to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare dist directory
+        run: |
+          mkdir -p dist
+          # Copy static assets (HTML, images, JS inline already) to root of dist
+          cp -R static/* dist/
+          # Copy data folder so fetch('./data/locations.json') works
+          mkdir -p dist/data
+          cp data/locations.json dist/data/locations.json
+          # Optional: create a 404 that redirects to index (single-page style) if needed
+          cat > dist/404.html <<'EOF'
+          <!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=./index.html"/></head><body></body></html>
+          EOF
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
