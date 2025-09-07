@@ -1,5 +1,8 @@
 # Minecraft Discord Bot
 
+[![GitHub Pages](https://img.shields.io/badge/GitHub-Pages-blue?logo=github&logoColor=white)](https://multyp.github.io/minebot/)
+
+
 A feature-rich Discord bot for managing Minecraft server information and locations with a clean, modular architecture.
 
 ## Features
