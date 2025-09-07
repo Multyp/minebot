@@ -5,7 +5,7 @@ Minecraft server integration service.
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 from mcstatus import JavaServer
 
@@ -35,6 +35,8 @@ class MinecraftService:
         
         self._server: Optional[JavaServer] = None
         self._last_status: Optional[ServerStatus] = None
+        # Cache of last known player names (simple list)
+        self._last_player_names = []  # type: List[str]
     
     async def initialize(self):
         """Initialize the Minecraft service."""
@@ -141,6 +143,34 @@ class MinecraftService:
         except Exception as e:
             self.logger.warning(f"Server query failed: {e}")
             raise MinecraftServerError(f"Query failed: {e}")
+
+    async def get_player_names(self) -> List[str]:
+        """Return a list of current player names.
+
+        Tries a full query first (if enabled). Falls back to status sample list.
+        Returns an empty list if neither succeeds.
+        """
+        if not self._server:
+            raise MinecraftServerError("Server not initialized")
+        names: List[str] = []
+        # Try query first for complete list
+        try:
+            query_data = await self.query_server()
+            names = query_data.get('players', {}).get('names', []) or []
+        except Exception:
+            # Fallback to status sample
+            try:
+                loop = asyncio.get_event_loop()
+                status = await loop.run_in_executor(None, self._server.status)
+                sample = getattr(status.players, 'sample', None) or []
+                # sample is list of Player objects with .name attribute
+                names = [getattr(p, 'name', str(p)) for p in sample]
+            except Exception:
+                names = []
+
+        # Cache for potential later use (not strictly required yet)
+        self._last_player_names = names
+        return names
     
     @property
     def last_known_status(self) -> Optional[ServerStatus]:

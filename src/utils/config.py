@@ -29,7 +29,7 @@ class DiscordConfig:
     """Discord bot configuration."""
     token: str
     guild_id: Optional[int] = None
-    crash_alert_channel_id: Optional[int] = None
+    alert_channel_id: Optional[int] = None
 
 
 @dataclass
@@ -51,13 +51,15 @@ class Config:
         guild_id_str = os.getenv("DISCORD_GUILD_ID")
         guild_id = int(guild_id_str) if guild_id_str else None
 
-        crash_channel_str = os.getenv("CRASH_ALERT_CHANNEL_ID")
-        crash_alert_channel_id = int(crash_channel_str) if crash_channel_str else None
-        
+        # Backward compatibility: support both ALERT_CHANNEL_ID and CRASH_ALERT_CHANNEL_ID
+        alert_channel_str = os.getenv("ALERT_CHANNEL_ID")
+        channel_raw = alert_channel_str
+        alert_channel_id = int(channel_raw) if channel_raw else None
+
         discord_config = DiscordConfig(
             token=token,
             guild_id=guild_id,
-            crash_alert_channel_id=crash_alert_channel_id
+            alert_channel_id=alert_channel_id
         )
         
         # Minecraft configuration

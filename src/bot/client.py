@@ -49,10 +49,11 @@ class MinecraftBot:
             self.client, self.event_bus, self.location_manager
         )
 
-        # Crash monitoring state (instance-specific)
+        # Monitoring state (instance-specific)
         self._crash_monitor_task = None
         self._consecutive_failures = 0
         self._crash_alert_sent = False
+        self._last_players = set()
 
         # Setup Discord client event callbacks
         self._setup_client_events()
@@ -131,10 +132,10 @@ class MinecraftBot:
         self.logger.info("Bot shutdown complete")
 
     async def _crash_monitor_loop(self):
-        """Background task to monitor server availability and send crash alerts."""
+        """Background task to monitor server availability, crash, and player activity."""
         check_interval = 30  # seconds between status checks
         failure_threshold = 4  # number of consecutive failures ( ~=2 minutes )
-        channel_id = self.config.discord.crash_alert_channel_id
+        channel_id = getattr(self.config.discord, 'alert_channel_id', None)
         self.logger.info("Starting crash monitor loop")
         await self.client.wait_until_ready()
 
@@ -147,18 +148,52 @@ class MinecraftBot:
                         await self._send_recovery_alert(channel_id, status)
                     self._consecutive_failures = 0
                     self._crash_alert_sent = False
+
+                    # Player activity monitoring
+                    try:
+                        names = await self.minecraft_service.get_player_names()
+                        current = set(names)
+                        joined = sorted(current - self._last_players)
+                        left = sorted(self._last_players - current)
+                        if joined or left:
+                            await self._send_player_activity(channel_id, joined, left)
+                        self._last_players = current
+                    except Exception as e:
+                        self.logger.debug(f"Player list fetch failed: {e}")
                 else:
                     self._consecutive_failures += 1
                     if (self._consecutive_failures >= failure_threshold \
                         and not self._crash_alert_sent):
                         await self._send_crash_alert(channel_id)
                         self._crash_alert_sent = True
+                    if self._last_players:
+                        self._last_players.clear()
                 await asyncio.sleep(check_interval)
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 self.logger.error(f"Crash monitor loop error: {e}")
                 await asyncio.sleep(check_interval)
+
+    async def _send_player_activity(self, channel_id: Optional[int], joined, left):
+        """Send player join/leave notifications to alert channel."""
+        if not channel_id or (not joined and not left):
+            return
+        channel = self.client.get_channel(channel_id)
+        if not channel:
+            try:
+                channel = await self.client.fetch_channel(channel_id)
+            except Exception:
+                return
+        parts = []
+        if joined:
+            parts.append("🟢 Joined: " + ", ".join(f"`{n}`" for n in joined))
+        if left:
+            parts.append("🔴 Left: " + ", ".join(f"`{n}`" for n in left))
+        try:
+            await channel.send("\n".join(parts))
+        except Exception as e:
+            self.logger.debug(f"Failed to send player activity: {e}")
 
     async def _send_crash_alert(self, channel_id: Optional[int]):
         """Send an alert to the configured channel when server is considered crashed."""
