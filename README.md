@@ -1,136 +1,163 @@
 # Minecraft Discord Bot
 
-A Discord bot for managing Minecraft server status and location tracking with a clean, modular architecture.
+A feature-rich Discord bot for managing Minecraft server information and locations with a clean, modular architecture.
 
 ## Features
 
-- 🟢 **Server Status**: Check if your Minecraft server is online
-- 🌱 **Server Seed**: Display and copy the world seed
-- 📍 **Location Management**: Add, remove, and track multiple instances of locations
-- 🏴‍☠️ **Loot Tracking**: Mark locations as looted or available
-- 💎 **Multi-Instance Support**: Handle multiple instances of the same structure type
-- 🎮 **Rich Embeds**: Beautiful Discord embeds with consistent branding
+- **Server Status**: Check Minecraft server status, player count, and latency
+- **Location Management**: Store, track, and manage coordinates for various locations
+- **Loot Tracking**: Mark locations as looted or available
+- **Multiple Instances**: Support multiple instances of the same location type
+- **Rich Embeds**: Beautiful Discord embeds with consistent styling
+- **Event-Driven Architecture**: Decoupled components with IPC communication
 
-## Project Structure
+## Architecture Overview
 
 ```
-minebot/
-├── bot.py                      # Main bot entry point
-├── config.py                   # Configuration management
-├── location_manager.py         # Location data management
-├── minecraft_utils.py          # Minecraft server utilities
-├── embed_utils.py             # Discord embed utilities
-├── commands/
-│   ├── __init__.py
-│   ├── basic_commands.py      # Status and seed commands
-│   └── location_commands.py   # Location management commands
-├── requirements.txt           # Python dependencies
-├── .env.example              # Environment variables template
-├── .env                      # Your environment variables (create from .env.example)
-├── locations.json            # Location data storage
-└── README.md                 # This file
+📁 src/
+├── 🤖 bot/          # Main bot client and events
+├── ⚡ commands/     # Discord command handlers  
+├── 🔧 services/     # Business logic services
+├── 📊 models/       # Data models
+├── 🛠️  utils/       # Utilities and helpers
+└── 📡 ipc/         # Inter-process communication
 ```
+
+### Key Components
+
+- **Component Architecture**: Clean separation of concerns with single-responsibility modules
+- **Event Bus System**: Decoupled communication between services using events
+- **Service Layer**: Business logic separated from Discord interactions
+- **Data Models**: Structured data representation with validation
+- **Storage Service**: Async file I/O with atomic operations
 
 ## Installation
 
-1. **Clone or download the project files**
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd minecraft-discord-bot
+   ```
 
-2. **Install Python dependencies:**
+2. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Setup environment variables:**
+3. **Configure environment:**
    ```bash
-   cp .env.example .env
-   # Edit .env with your actual values
+   cp config/.env.example .env
+   # Edit .env with your configuration
    ```
 
-4. **Configure your Discord bot:**
-   - Create a Discord application and bot at https://discord.com/developers/applications
-   - Copy the bot token to your `.env` file
-   - Invite the bot to your server with appropriate permissions
+4. **Set up Discord bot:**
+   - Create a bot at https://discord.com/developers/applications
+   - Get the bot token and add to `.env`
+   - Invite bot to your server with appropriate permissions
 
 ## Configuration
 
-Edit your `.env` file with the following values:
+Edit the `.env` file with your settings:
 
-- `DISCORD_TOKEN`: Your Discord bot token
-- `GUILD_ID`: Your Discord server ID
-- `MC_SERVER_IP`: Your Minecraft server IP address
-- `MC_SERVER_PORT`: Your Minecraft server port (default: 25565)
-- `MC_SEED`: Your Minecraft world seed
-- `LOCATIONS_FILE`: Location data file path (default: locations.json)
+```env
+# Discord Configuration
+DISCORD_TOKEN=your_discord_bot_token_here
+DISCORD_GUILD_ID=your_guild_id_here_optional
 
-## Usage
+# Minecraft Server Configuration  
+MC_SERVER_HOST=your.minecraft.server.ip
+MC_SERVER_PORT=25565
 
-### Running the Bot
+# Server Information
+MC_SEED=your_server_seed_here
+
+# Data Storage
+DATA_DIR=data
+```
+
+## Running the Bot
 
 ```bash
-python bot.py
+python main.py
 ```
 
-### Available Commands
+## Commands
 
-#### Basic Commands
+### Server Commands
+
 - `/status` - Check Minecraft server status
-- `/seed` - Display the server seed
+- `/seed` - Get the server seed
 
-#### Location Management (`/locate`)
+### Location Commands
+
 - `/locate get <location> [index]` - Get coordinates for a location
 - `/locate list [show_looted]` - List all saved locations
-- `/locate add <name> <x> <y> <z> [looted]` - Add a new location
-- `/locate remove <location> [index]` - Remove a location or instance
+- `/locate add <name> <x> <y> <z> [looted]` - Add new location
+- `/locate remove <location> [index]` - Remove location(s)
 - `/locate loot <location> <looted> [index]` - Update loot status
-- `/locate help` - Show detailed help for location commands
+- `/locate help` - Show detailed command help
 
-### Example Usage
+## Development
+
+### Project Structure
 
 ```
-# Add a new stronghold location
-/locate add stronghold -800 30 1200
-
-# Add multiple ocean monuments
-/locate add ocean_monument 1200 60 -400
-/locate add ocean_monument -800 62 800
-/locate add ocean_monument 400 58 1600
-
-# Get all ocean monuments
-/locate get ocean_monument
-
-# Get specific instance
-/locate get ocean_monument 2
-
-# Mark a location as looted
-/locate loot stronghold True
-
-# List only available (unlooted) locations
-/locate list show_looted:False
+minecraft-discord-bot/
+├── src/
+│   ├── bot/
+│   │   ├── client.py              # Main bot client
+│   │   └── events.py              # Event handlers
+│   ├── commands/
+│   │   ├── server.py              # Server commands
+│   │   └── locations/             # Location commands
+│   │       ├── group.py           # Command group
+│   │       └── commands.py        # Individual commands
+│   ├── services/
+│   │   ├── location_manager.py    # Location management
+│   │   ├── minecraft.py           # Server integration
+│   │   └── storage.py             # File I/O
+│   ├── models/
+│   │   └── location.py            # Data models
+│   ├── utils/
+│   │   ├── config.py              # Configuration
+│   │   ├── embeds.py              # Discord embeds
+│   │   └── exceptions.py          # Custom exceptions
+│   └── ipc/
+│       └── events.py              # Event bus system
+├── data/                          # Persistent storage
+├── config/                        # Configuration files
+└── main.py                        # Entry point
 ```
 
-## Architecture Overview
+### Adding New Commands
 
-### Modular Design
-The bot follows a clean, modular architecture with separation of concerns:
+1. Create command handler in appropriate module
+2. Register with command tree or group
+3. Add embed builders if needed
+4. Emit events for component communication
 
-- **`config.py`**: Centralized configuration management with environment variable support
-- **`location_manager.py`**: Data layer for location storage and management with backward compatibility
-- **`minecraft_utils.py`**: Minecraft-specific utilities and server communication
-- **`embed_utils.py`**: Discord embed creation with consistent styling
-- **`commands/`**: Command definitions organized by functionality
+### Event System
 
-### Key Features
+The bot uses an event-driven architecture for component communication:
 
-1. **Type Safety**: Uses dataclasses and type hints for better code reliability
-2. **Error Handling**: Comprehensive error handling with user-friendly messages
-3. **Data Validation**: Validates coordinates and handles edge cases
-4. **Backward Compatibility**: Automatically migrates old data formats
-5. **Extensible**: Easy to add new commands and features
-6. **Environment-Based Config**: Secure token management through environment variables
+```python
+# Subscribe to events
+event_bus.subscribe('location_added', handler)
 
-### Location Data Structure
+# Emit events
+event_bus.emit('location_added', data)
+```
 
-Locations are stored with the following structure:
+### Error Handling
+
+- Custom exception hierarchy for different error types
+- Graceful error responses to users
+- Comprehensive logging for debugging
+
+## Data Storage
+
+Location data is stored in JSON format with the following structure:
+
 ```json
 {
   "location_name": [
@@ -142,32 +169,11 @@ Locations are stored with the following structure:
 }
 ```
 
-This allows for multiple instances of the same location type (e.g., multiple ocean monuments).
-
-## Development
-
-### Adding New Commands
-
-1. Create command methods in the appropriate command file
-2. Use the existing embed utilities for consistent styling
-3. Handle errors gracefully with user-friendly messages
-4. Add the command to the setup function
-
-### Code Style
-
-- Use type hints for better code documentation
-- Follow Python naming conventions
-- Use dataclasses for structured data
-- Handle exceptions appropriately
-- Add docstrings to public methods
+The bot automatically handles legacy format migration and creates backups.
 
 ## Contributing
 
-1. Follow the existing code structure and patterns
-2. Add appropriate error handling
-3. Use the embed utilities for consistent Discord responses
-4. Test commands thoroughly before submitting
-
-## License
-
-This project is open source and available under the MIT License.
+1. Follow the established architecture patterns
+2. Add tests for new features
+3. Update documentation
+4. Use descriptive commit messages
