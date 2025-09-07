@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 import logging
 from typing import Optional
+import asyncio
 
 from ..utils.config import Config
 from ..services.location_manager import LocationManager
@@ -47,7 +48,13 @@ class MinecraftBot:
         self.event_handler = EventHandler(
             self.client, self.event_bus, self.location_manager
         )
-        
+
+        # Crash monitoring state (instance-specific)
+        self._crash_monitor_task = None
+        self._consecutive_failures = 0
+        self._crash_alert_sent = False
+
+        # Setup Discord client event callbacks
         self._setup_client_events()
     
     def _setup_client_events(self):
@@ -82,6 +89,10 @@ class MinecraftBot:
         # Initialize services
         await self.location_manager.initialize()
         await self.minecraft_service.initialize()
+
+        # Start crash monitor background task
+        if not self._crash_monitor_task:
+            self._crash_monitor_task = asyncio.create_task(self._crash_monitor_loop())
         
         # Emit ready event
         self.event_bus.emit('bot_ready', {
@@ -100,6 +111,14 @@ class MinecraftBot:
     async def close(self):
         """Gracefully shutdown the bot."""
         self.logger.info("Shutting down bot...")
+
+        # Cancel crash monitor
+        if self._crash_monitor_task:
+            self._crash_monitor_task.cancel()
+            try:
+                await self._crash_monitor_task
+            except Exception:
+                pass
         
         # Cleanup services
         await self.minecraft_service.cleanup()
@@ -110,3 +129,69 @@ class MinecraftBot:
             await self.client.close()
         
         self.logger.info("Bot shutdown complete")
+
+    async def _crash_monitor_loop(self):
+        """Background task to monitor server availability and send crash alerts."""
+        check_interval = 30  # seconds between status checks
+        failure_threshold = 4  # number of consecutive failures ( ~=2 minutes )
+        channel_id = self.config.discord.crash_alert_channel_id
+        self.logger.info("Starting crash monitor loop")
+        await self.client.wait_until_ready()
+
+        while not self.client.is_closed():
+            try:
+                status = await self.minecraft_service.get_server_status()
+                if status.online:
+                    # Reset counters if server recovered
+                    if self._consecutive_failures >= failure_threshold and self._crash_alert_sent:
+                        await self._send_recovery_alert(channel_id, status)
+                    self._consecutive_failures = 0
+                    self._crash_alert_sent = False
+                else:
+                    self._consecutive_failures += 1
+                    if (self._consecutive_failures >= failure_threshold \
+                        and not self._crash_alert_sent):
+                        await self._send_crash_alert(channel_id)
+                        self._crash_alert_sent = True
+                await asyncio.sleep(check_interval)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                self.logger.error(f"Crash monitor loop error: {e}")
+                await asyncio.sleep(check_interval)
+
+    async def _send_crash_alert(self, channel_id: Optional[int]):
+        """Send an alert to the configured channel when server is considered crashed."""
+        if not channel_id:
+            self.logger.warning("Crash alert channel not configured; skipping crash alert.")
+            return
+        channel = self.client.get_channel(channel_id)
+        if not channel:
+            try:
+                channel = await self.client.fetch_channel(channel_id)
+            except Exception:
+                self.logger.error(f"Unable to fetch crash alert channel {channel_id}")
+                return
+        try:
+            await channel.send("⚠️ **Minecraft Server Crash Detected**\nThe server has been unreachable for the last 2 minutes.")
+            self.logger.info("Crash alert sent")
+        except Exception as e:
+            self.logger.error(f"Failed to send crash alert: {e}")
+
+    async def _send_recovery_alert(self, channel_id: Optional[int], status):
+        """Send a recovery notification when server comes back online after crash."""
+        if not channel_id:
+            return
+        channel = self.client.get_channel(channel_id)
+        if not channel:
+            try:
+                channel = await self.client.fetch_channel(channel_id)
+            except Exception:
+                return
+        try:
+            await channel.send(
+                f"✅ **Server Recovered**\nBack online with {status.players_online}/{status.max_players} players. Latency {status.latency:.1f}ms"
+            )
+            self.logger.info("Recovery alert sent")
+        except Exception as e:
+            self.logger.error(f"Failed to send recovery alert: {e}")

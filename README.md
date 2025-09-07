@@ -66,6 +66,7 @@ Edit the `.env` file with your settings:
 # Discord Configuration
 DISCORD_TOKEN=your_discord_bot_token_here
 DISCORD_GUILD_ID=your_guild_id_here_optional
+CRASH_ALERT_CHANNEL_ID=123456789012345678  # Channel ID to receive crash/recovery alerts (optional)
 
 # Minecraft Server Configuration  
 MC_SERVER_HOST=your.minecraft.server.ip
@@ -77,6 +78,10 @@ MC_SEED=your_server_seed_here
 # Data Storage
 DATA_DIR=data
 ```
+
+### Crash / Recovery Alerts
+
+Set `CRASH_ALERT_CHANNEL_ID` to a text channel ID to receive automatic alerts when the Minecraft server becomes unreachable for ~2 minutes (4 failed checks at 30s intervals) and a recovery notice when it comes back online. If unset, alerts are skipped.
 
 ## Running the Bot
 
