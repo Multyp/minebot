@@ -25,6 +25,14 @@ class MinecraftConfig:
 
 
 @dataclass
+class ServerConfig:
+    """Server (host machine) login configuration."""
+    host: str
+    user: str
+    password: str
+
+
+@dataclass
 class DiscordConfig:
     """Discord bot configuration."""
     token: str
@@ -37,6 +45,7 @@ class Config:
     """Main application configuration."""
     discord: DiscordConfig
     minecraft: MinecraftConfig
+    server: ServerConfig
     seed: str
     data_dir: Path
     
@@ -51,10 +60,8 @@ class Config:
         guild_id_str = os.getenv("DISCORD_GUILD_ID")
         guild_id = int(guild_id_str) if guild_id_str else None
 
-        # Backward compatibility: support both ALERT_CHANNEL_ID and CRASH_ALERT_CHANNEL_ID
         alert_channel_str = os.getenv("ALERT_CHANNEL_ID")
-        channel_raw = alert_channel_str
-        alert_channel_id = int(channel_raw) if channel_raw else None
+        alert_channel_id = int(alert_channel_str) if alert_channel_str else None
 
         discord_config = DiscordConfig(
             token=token,
@@ -70,6 +77,19 @@ class Config:
         mc_port = int(os.getenv("MC_SERVER_PORT", "25565"))
         minecraft_config = MinecraftConfig(host=mc_host, port=mc_port)
         
+        # Server (host machine) configuration
+        server_host = os.getenv("SERVER_HOST")
+        server_user = os.getenv("SERVER_USER")
+        server_password = os.getenv("SERVER_PASSWORD")
+        if not (server_host and server_user and server_password):
+            raise ConfigError("SERVER_HOST, SERVER_USER, and SERVER_PASSWORD are required")
+        
+        server_config = ServerConfig(
+            host=server_host,
+            user=server_user,
+            password=server_password
+        )
+        
         # Server seed
         seed = os.getenv("MC_SEED", "")
         if not seed:
@@ -82,6 +102,7 @@ class Config:
         return cls(
             discord=discord_config,
             minecraft=minecraft_config,
+            server=server_config,
             seed=seed,
             data_dir=data_dir
         )

@@ -7,6 +7,7 @@ from discord.ext import commands
 import logging
 from typing import Optional
 import asyncio
+import paramiko
 
 from ..utils.config import Config
 from ..services.location_manager import LocationManager
@@ -131,6 +132,24 @@ class MinecraftBot:
         
         self.logger.info("Bot shutdown complete")
 
+    async def check_maintenance_flag(self, host, user, password):
+        """Check if the maintenance flag file exists on the server."""
+        loop = asyncio.get_running_loop()
+
+        def _check():
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(host, username=user, password=password)
+            stdin, stdout, stderr = ssh.exec_command(
+                "test -f /tmp/mc_maintenance.flag && echo yes || echo no"
+            )
+            result = stdout.read().decode().strip()
+            ssh.close()
+            return result == "yes"
+
+        return await loop.run_in_executor(None, _check)
+
+
     async def _crash_monitor_loop(self):
         """Background task to monitor server availability, crash, and player activity."""
         check_interval = 30  # seconds between status checks
@@ -160,15 +179,25 @@ class MinecraftBot:
                         self._last_players = current
                     except Exception as e:
                         self.logger.debug(f"Player list fetch failed: {e}")
+
                 else:
                     self._consecutive_failures += 1
-                    if (self._consecutive_failures >= failure_threshold \
+                    if (self._consecutive_failures >= failure_threshold
                         and not self._crash_alert_sent):
-                        await self._send_crash_alert(channel_id)
+
+                        # 🔹 Check if it's maintenance or a crash
+                        if await self.check_maintenance_flag(self.config.server.host, self.config.server.user, self.config.server.password):
+                            await self._send_message(channel_id, "Server is in maintenance mode.")
+                        else:
+                            await self._send_crash_alert(channel_id)
+
                         self._crash_alert_sent = True
+
                     if self._last_players:
                         self._last_players.clear()
+
                 await asyncio.sleep(check_interval)
+
             except asyncio.CancelledError:
                 break
             except Exception as e:
@@ -212,6 +241,21 @@ class MinecraftBot:
             self.logger.info("Crash alert sent")
         except Exception as e:
             self.logger.error(f"Failed to send crash alert: {e}")
+
+    async def _send_message(self, channel_id: Optional[int], message: str):
+        """Send a generic message to the specified channel."""
+        if not channel_id:
+            return
+        channel = self.client.get_channel(channel_id)
+        if not channel:
+            try:
+                channel = await self.client.fetch_channel(channel_id)
+            except Exception:
+                return
+        try:
+            await channel.send(message)
+        except Exception as e:
+            self.logger.error(f"Failed to send message: {e}")
 
     async def _send_recovery_alert(self, channel_id: Optional[int], status):
         """Send a recovery notification when server comes back online after crash."""
