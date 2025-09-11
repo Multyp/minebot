@@ -237,13 +237,40 @@ class MinecraftBot:
                 self.logger.error(f"Unable to fetch crash alert channel {channel_id}")
                 return
         try:
-            await channel.send("⚠️ **Minecraft Server Crash Detected**\nThe server has been unreachable for the last 2 minutes.")
+            # Create crash alert embed
+            embed = discord.Embed(
+                title="⚠️ Server Crash Detected",
+                description="The Minecraft server has been unreachable for over 2 minutes.",
+                color=discord.Color.red()
+            )
+            embed.add_field(
+                name="🔍 Status",
+                value="❌ **Offline**",
+                inline=True
+            )
+            embed.add_field(
+                name="⏱️ Duration",
+                value="2+ minutes",
+                inline=True
+            )
+            embed.add_field(
+                name="🚨 Action Required",
+                value="Server restart may be needed",
+                inline=True
+            )
+            embed.set_footer(text="🎮 Gooner Status")
+            
+            # Send embed with role ping in spoiler
+            await channel.send(
+                content="||<@&Owner>||",
+                embed=embed
+            )
             self.logger.info("Crash alert sent")
         except Exception as e:
             self.logger.error(f"Failed to send crash alert: {e}")
 
     async def _send_message(self, channel_id: Optional[int], message: str):
-        """Send a generic message to the specified channel."""
+        """Send a maintenance message to the specified channel."""
         if not channel_id:
             return
         channel = self.client.get_channel(channel_id)
@@ -253,9 +280,36 @@ class MinecraftBot:
             except Exception:
                 return
         try:
-            await channel.send(message)
+            # Create maintenance embed
+            embed = discord.Embed(
+                title="🔧 Server Maintenance",
+                description="The Minecraft server is currently under maintenance.",
+                color=discord.Color.orange()
+            )
+            embed.add_field(
+                name="🔍 Status",
+                value="🛠️ **Maintenance Mode**",
+                inline=True
+            )
+            embed.add_field(
+                name="⏱️ Expected Duration",
+                value="Unknown",
+                inline=True
+            )
+            embed.add_field(
+                name="📝 Note",
+                value="Server will return once maintenance is complete",
+                inline=False
+            )
+            embed.set_footer(text="🎮 Gooner Status")
+            
+            # Send embed with role ping in spoiler
+            await channel.send(
+                content="||<@&Owner>||",
+                embed=embed
+            )
         except Exception as e:
-            self.logger.error(f"Failed to send message: {e}")
+            self.logger.error(f"Failed to send maintenance message: {e}")
 
     async def _send_recovery_alert(self, channel_id: Optional[int], status):
         """Send a recovery notification when server comes back online after crash."""
@@ -268,8 +322,38 @@ class MinecraftBot:
             except Exception:
                 return
         try:
+            # Create recovery embed
+            embed = discord.Embed(
+                title="✅ Server Recovery",
+                description="The Minecraft server has successfully recovered and is back online!",
+                color=discord.Color.green()
+            )
+            embed.add_field(
+                name="🔍 Status",
+                value="🟢 **Online**",
+                inline=True
+            )
+            embed.add_field(
+                name="👥 Players",
+                value=f"{status.players_online}/{status.max_players}",
+                inline=True
+            )
+            embed.add_field(
+                name="📡 Latency",
+                value=f"{status.latency:.1f}ms",
+                inline=True
+            )
+            embed.add_field(
+                name="🎉 Welcome Back!",
+                value="The server is ready for players",
+                inline=False
+            )
+            embed.set_footer(text="🎮 Gooner Status")
+            
+            # Send embed with role ping in spoiler
             await channel.send(
-                f"✅ **Server Recovered**\nBack online with {status.players_online}/{status.max_players} players. Latency {status.latency:.1f}ms"
+                content="||<@&Owner>||",
+                embed=embed
             )
             self.logger.info("Recovery alert sent")
         except Exception as e:
