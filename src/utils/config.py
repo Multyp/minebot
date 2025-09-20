@@ -18,6 +18,8 @@ class MinecraftConfig:
     """Minecraft server configuration."""
     host: str
     port: int = 25565
+    world_dir: str = "" 
+    server_dir: str = ""
     
     @property
     def address(self) -> str:
@@ -39,6 +41,7 @@ class DiscordConfig:
     guild_id: Optional[int] = None
     alert_channel_id: Optional[int] = None
     log_channel_id: Optional[int] = None
+    advancements_channel_id: Optional[int] = None
     owner_role_id: Optional[int] = None
 
 @dataclass
@@ -67,6 +70,9 @@ class Config:
         log_channel_str = os.getenv("LOG_CHANNEL_ID")
         log_channel_id = int(log_channel_str) if log_channel_str else None
 
+        advancements_channel_str = os.getenv("ADVANCEMENTS_CHANNEL_ID")
+        advancements_channel_id = int(advancements_channel_str) if advancements_channel_str else None
+
         owner_role_str = os.getenv("OWNER_ROLE_ID")
         owner_role_id = int(owner_role_str) if owner_role_str else None
 
@@ -75,6 +81,7 @@ class Config:
             guild_id=guild_id,
             alert_channel_id=alert_channel_id,
             log_channel_id=log_channel_id,
+            advancements_channel_id=advancements_channel_id,
             owner_role_id=owner_role_id
         )
 
@@ -84,8 +91,10 @@ class Config:
             raise ConfigError("MC_SERVER_HOST environment variable is required")
         
         mc_port = int(os.getenv("MC_SERVER_PORT", "25565"))
-        minecraft_config = MinecraftConfig(host=mc_host, port=mc_port)
-        
+        world_dir = os.getenv("MC_WORLD_DIR", "/home/minecraft/server/world")
+        server_dir = os.getenv("MC_SERVER_DIR", "/home/minecraft/server")
+        minecraft_config = MinecraftConfig(host=mc_host, port=mc_port, world_dir=world_dir, server_dir=server_dir)
+
         # Server (host machine) configuration
         server_host = os.getenv("SERVER_HOST")
         server_user = os.getenv("SERVER_USER")
