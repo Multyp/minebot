@@ -38,7 +38,8 @@ class DiscordConfig:
     token: str
     guild_id: Optional[int] = None
     alert_channel_id: Optional[int] = None
-
+    log_channel_id: Optional[int] = None
+    owner_role_id: Optional[int] = None
 
 @dataclass
 class Config:
@@ -63,12 +64,20 @@ class Config:
         alert_channel_str = os.getenv("ALERT_CHANNEL_ID")
         alert_channel_id = int(alert_channel_str) if alert_channel_str else None
 
+        log_channel_str = os.getenv("LOG_CHANNEL_ID")
+        log_channel_id = int(log_channel_str) if log_channel_str else None
+
+        owner_role_str = os.getenv("OWNER_ROLE_ID")
+        owner_role_id = int(owner_role_str) if owner_role_str else None
+
         discord_config = DiscordConfig(
             token=token,
             guild_id=guild_id,
-            alert_channel_id=alert_channel_id
+            alert_channel_id=alert_channel_id,
+            log_channel_id=log_channel_id,
+            owner_role_id=owner_role_id
         )
-        
+
         # Minecraft configuration
         mc_host = os.getenv("MC_SERVER_HOST")
         if not mc_host:

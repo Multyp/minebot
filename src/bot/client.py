@@ -154,7 +154,8 @@ class MinecraftBot:
         """Background task to monitor server availability, crash, and player activity."""
         check_interval = 30  # seconds between status checks
         failure_threshold = 4  # number of consecutive failures ( ~=2 minutes )
-        channel_id = getattr(self.config.discord, 'alert_channel_id', None)
+        alert_channel_id = getattr(self.config.discord, 'alert_channel_id', None)
+        log_channel_id = getattr(self.config.discord, 'log_channel_id', None)
         self.logger.info("Starting crash monitor loop")
         await self.client.wait_until_ready()
 
@@ -164,7 +165,7 @@ class MinecraftBot:
                 if status.online:
                     # Reset counters if server recovered
                     if self._consecutive_failures >= failure_threshold and self._crash_alert_sent:
-                        await self._send_recovery_alert(channel_id, status)
+                        await self._send_recovery_alert(alert_channel_id, status)
                     self._consecutive_failures = 0
                     self._crash_alert_sent = False
 
@@ -175,7 +176,7 @@ class MinecraftBot:
                         joined = sorted(current - self._last_players)
                         left = sorted(self._last_players - current)
                         if joined or left:
-                            await self._send_player_activity(channel_id, joined, left)
+                            await self._send_player_activity(log_channel_id, joined, left)
                         self._last_players = current
                     except Exception as e:
                         self.logger.debug(f"Player list fetch failed: {e}")
@@ -187,9 +188,9 @@ class MinecraftBot:
 
                         # 🔹 Check if it's maintenance or a crash
                         if await self.check_maintenance_flag(self.config.server.host, self.config.server.user, self.config.server.password):
-                            await self._send_message(channel_id, "Server is in maintenance mode.")
+                            await self._send_message(alert_channel_id, "Server is in maintenance mode.")
                         else:
-                            await self._send_crash_alert(channel_id)
+                            await self._send_crash_alert(alert_channel_id)
 
                         self._crash_alert_sent = True
 
@@ -262,7 +263,7 @@ class MinecraftBot:
             
             # Send embed with role ping in spoiler
             await channel.send(
-                content="||<@&Owner>||",
+                content=f"||<@&{self.config.discord.owner_role_id}>||",
                 embed=embed
             )
             self.logger.info("Crash alert sent")
@@ -305,7 +306,7 @@ class MinecraftBot:
             
             # Send embed with role ping in spoiler
             await channel.send(
-                content="||<@&Owner>||",
+                content=f"||<@&{self.config.discord.owner_role_id}>||",
                 embed=embed
             )
         except Exception as e:
@@ -352,7 +353,7 @@ class MinecraftBot:
             
             # Send embed with role ping in spoiler
             await channel.send(
-                content="||<@&Owner>||",
+                content="||<@&{self.config.discord.owner_role_id}>||",
                 embed=embed
             )
             self.logger.info("Recovery alert sent")
