@@ -28,5 +28,15 @@
       ],
       "looted": false
     }
+  ],
+  "end_city": [
+    {
+      "coords": [
+        -1647,
+        164,
+        2012
+      ],
+      "looted": true
+    }
   ]
 }
