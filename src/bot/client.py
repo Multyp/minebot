@@ -151,9 +151,8 @@ class RoleBot(commands.Bot):
                     )
                 
                 # Combine message content with role descriptions
-                full_message = message_content + "\n\n" + "\n\n".join(role_descriptions)
-                full_message += "\n\n*Add a reaction to get the role. Remove it to lose the role.*"
-                
+                full_message = message_content
+
                 # Send the message
                 message = await channel.send(full_message)
                 
