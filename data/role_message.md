@@ -19,8 +19,7 @@ Ces rôles servent à **participer aux discussions**, **partager ses projets** e
 
 Choisis les rôles qui t’intéressent en cliquant sur les réactions ci-dessous.
 Tu peux les ajouter ou les retirer à tout moment.
-
----
+_____
 
 ## 🇬🇧 English
 
@@ -40,4 +39,4 @@ These roles let you **join discussions**, **share your projects**, and **exchang
   For everything related to computer science: coding, personal projects, tools, etc.
 
 Pick the roles you’re interested in by clicking on the reactions below.
-You can add or remove them anytime. If you encounter any problem, contact @<1411748425640181760>
+You can add or remove them anytime. If you encounter any problem, contact <@&1411748425640181760>
