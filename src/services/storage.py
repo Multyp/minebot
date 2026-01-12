@@ -1,14 +1,16 @@
 """
 File storage service for persistent data management.
 """
-
 import json
 import asyncio
 import logging
 from pathlib import Path
 from typing import Dict, Any
 
-from ..utils.exceptions import StorageError
+
+class StorageError(Exception):
+    """Storage-related errors."""
+    pass
 
 
 class StorageService:

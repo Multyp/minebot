@@ -1,16 +1,13 @@
-# Minecraft Discord Bot
+# Role & Locations Discord Bot
 
 [![GitHub Pages](https://img.shields.io/badge/GitHub-Pages-blue?logo=github&logoColor=white)](https://multyp.github.io/minebot/)
 
 
-A feature-rich Discord bot for managing Minecraft server information and locations with a clean, modular architecture.
+A modular Discord bot for managing server roles, static locations, and simple automations with a clean, modular architecture.
 
 ## Features
 
-- **Server Status**: Check Minecraft server status, player count, and latency
- - **Player Activity Logging**: Monitor player join/leave events and post them to a configured log channel
- - **Advancement Monitoring**: Remote SSH-based watcher that posts Minecraft advancement completions to a Discord channel
- - **Maintenance Detection**: Detect maintenance mode via a remote flag file (/tmp/mc_maintenance.flag) and post maintenance notices instead of crash alerts
+- **Role Management**: Simple role assignment and removal commands
 - **Location Management**: Store, track, and manage coordinates for various locations
 - **Loot Tracking**: Mark locations as looted or available
 - **Multiple Instances**: Support multiple instances of the same location type
@@ -38,16 +35,15 @@ A feature-rich Discord bot for managing Minecraft server information and locatio
 - **Storage Service**: Async file I/O with atomic operations
 
 Additional runtime features:
-- Remote advancement monitoring via SSH (reads player advancement JSON files and posts to Discord)
-- Player join/leave notifications posted to a dedicated log channel
-- Crash detection with recovery alerts and optional role pings
+- Player join/leave notifications posted to a dedicated log channel (if enabled)
+- Optional alerting via configured channels
 
 ## Installation
 
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd minecraft-discord-bot
+   cd minebot
    ```
 
 2. **Install dependencies:**
@@ -74,32 +70,17 @@ Edit the `.env` file with your settings:
 # Discord Configuration
 DISCORD_TOKEN=your_discord_bot_token_here
 DISCORD_GUILD_ID=your_guild_id_here_optional
-ALERT_CHANNEL_ID=123456789012345678  # Channel ID to receive crash/recovery alerts (optional)
-LOG_CHANNEL_ID=234567890123456789    # Channel ID to receive player join/leave logs (optional)
-ADVANCEMENTS_CHANNEL_ID=345678901234567890  # Channel ID for advancement notifications (optional)
+ALERT_CHANNEL_ID=123456789012345678  # Channel ID to receive alerts (optional)
+LOG_CHANNEL_ID=234567890123456789    # Channel ID for logs (optional)
 OWNER_ROLE_ID=456789012345678901    # Role ID used to ping on alerts (optional)
-
-# Minecraft Server Configuration  
-MC_SERVER_HOST=your.minecraft.server.ip
-MC_SERVER_PORT=25565
-MC_WORLD_DIR=/home/minecraft/server/world  # remote world path for advancement monitoring
-MC_SERVER_DIR=/home/minecraft/server      # remote server directory (contains whitelist.json)
-
-# Server Information
-MC_SEED=your_server_seed_here
-
-# Remote server SSH credentials (required for advancement monitoring)
-SERVER_HOST=your.remote.server.ip
-SERVER_USER=ssh_user
-SERVER_PASSWORD=ssh_password
 
 # Data Storage
 DATA_DIR=data
 ```
 
-### Crash / Recovery Alerts
+### Alerts
 
-Set `ALERT_CHANNEL_ID` to a text channel ID to receive automatic alerts when the Minecraft server becomes unreachable for ~2 minutes (4 failed checks at 30s intervals) and a recovery notice when it comes back online. If unset, alerts are skipped. Use `LOG_CHANNEL_ID` to receive player join/leave notifications. Advancement monitoring posts to `ADVANCEMENTS_CHANNEL_ID` when enabled and properly configured.
+Set `ALERT_CHANNEL_ID` to a text channel ID to receive automated alerts from the bot (optional). Use `LOG_CHANNEL_ID` to receive activity logs.
 
 ## Running the Bot
 
@@ -151,8 +132,7 @@ If this is a project page served at `https://<user>.github.io/<repo>/`, relative
 
 ### Server Commands
 
-- `/status` - Check Minecraft server status
-- `/seed` - Get the server seed
+This bot currently focuses on role and location commands. Server-specific commands have been removed.
 
 ### Location Commands
 
@@ -168,7 +148,7 @@ If this is a project page served at `https://<user>.github.io/<repo>/`, relative
 ### Project Structure
 
 ```
-minecraft-discord-bot/
+minebot/
 ├── src/
 │   ├── bot/
 │   │   ├── client.py              # Main bot client
@@ -180,7 +160,6 @@ minecraft-discord-bot/
 │   │       └── commands.py        # Individual commands
 │   ├── services/
 │   │   ├── location_manager.py    # Location management
-│   │   ├── minecraft.py           # Server integration
 │   │   └── storage.py             # File I/O
 │   ├── models/
 │   │   └── location.py            # Data models

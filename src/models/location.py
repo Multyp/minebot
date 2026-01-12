@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple
 
 @dataclass
 class Coordinates:
-    """3D coordinates in Minecraft world."""
+    """3D coordinates in a world or map."""
     x: int
     y: int
     z: int

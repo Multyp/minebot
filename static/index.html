@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MineBot Locations</title>
-  <meta name="description" content="Minecraft world locations viewer" />
+  <title>Locations Viewer</title>
+  <meta name="description" content="Locations viewer" />
   <!-- Tailwind CSS (CDN build) -->
   <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
   <!-- Flowbite -->
@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" href="./steve.jpg" />
   <style>
     body { 
-      background: url('./mc-background.png') repeat; 
+      background: url('./background.png') repeat; 
       image-rendering: pixelated;
     }
     .panel {
@@ -21,18 +21,18 @@
       backdrop-filter: blur(4px);
       box-shadow: 0 0 0 2px #3f6212, 0 0 12px #000 inset;
     }
-    .mc-font {
-      font-family: 'Minecraftia', 'Press Start 2P', ui-monospace, monospace;
+    .mono-font {
+      font-family: 'Press Start 2P', ui-monospace, monospace;
       letter-spacing: 0.5px;
     }
   </style>
 </head>
 <body class="h-full text-gray-100">
   <header class="panel mx-auto max-w-5xl mt-6 rounded-lg border border-lime-600 p-4 flex items-center gap-4">
-    <img src="./steve.jpg" alt="Logo" class="w-10 h-10" />
+    <img src="./logo.jpg" alt="Logo" class="w-10 h-10" />
     <div>
-      <h1 class="text-2xl font-bold mc-font text-lime-400 drop-shadow">MineBot Locations</h1>
-      <p class="text-sm text-lime-200/70">Tracking structures & farms — click to copy /tp command.</p>
+      <h1 class="text-2xl font-bold mono-font text-lime-400 drop-shadow">Locations Viewer</h1>
+      <p class="text-sm text-lime-200/70">Tracking structures & locations — click to copy coordinates.</p>
     </div>
     <div class="ml-auto flex gap-2">
       <button id="refreshBtn" class="px-3 py-2 text-sm rounded bg-lime-600 hover:bg-lime-500 focus:ring-2 focus:ring-lime-400">Refresh</button>
@@ -45,7 +45,7 @@
 
     <section class="panel rounded-lg border border-lime-700 p-4">
       <div class="flex items-center mb-4 gap-3 flex-wrap">
-        <h2 class="text-xl font-semibold mc-font text-lime-300">Locations</h2>
+        <h2 class="text-xl font-semibold mono-font text-lime-300">Locations</h2>
         <input id="search" type="text" placeholder="Search..." class="flex-1 min-w-[180px] bg-gray-900/70 border border-lime-700 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500" />
         <select id="statusFilter" class="bg-gray-900/70 border border-lime-700 rounded px-3 py-2 text-sm">
           <option value="all">All</option>

@@ -1,5 +1,5 @@
 """
-Custom exceptions for the Minecraft Discord Bot.
+Custom exceptions for the bot.
 """
 
 
@@ -13,9 +13,7 @@ class ConfigError(BotError):
     pass
 
 
-class MinecraftServerError(BotError):
-    """Minecraft server connection errors."""
-    pass
+# Minecraft-specific server error removed
 
 
 class LocationError(BotError):
