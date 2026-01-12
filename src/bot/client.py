@@ -60,10 +60,19 @@ class RoleBot(commands.Bot):
             self.logger.error(f"❌ Failed to load cog role_reactions: {e}")
             self.logger.error(traceback.format_exc())
         
+        # Sync slash commands with Discord
+        try:
+            synced = await self.tree.sync()
+            self.logger.info(f"✅ Synced {len(synced)} slash command(s)")
+        except Exception as e:
+            self.logger.error(f"❌ Failed to sync commands: {e}")
+            self.logger.error(traceback.format_exc())
+        
         self.logger.info("Bot setup complete")
         
         # List all registered commands
         self.logger.info(f"Registered commands: {[cmd.name for cmd in self.commands]}")
+        self.logger.info(f"Registered slash commands: {[cmd.name for cmd in self.tree.get_commands()]}")
 
     async def _check_role_message(self):
         """Check if role message exists and is valid."""

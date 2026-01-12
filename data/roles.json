@@ -1,0 +1,24 @@
+{
+  "message_id": 1460279176052342826,
+  "channel_id": 1460194534515282095,
+  "roles": [
+    {
+      "role_id": 1460196766409424946,
+      "role_name": "Tech Lab",
+      "emoji": "💻",
+      "description": "Get help or share your computer science projects"
+    },
+    {
+      "role_id": 1460196692472107159,
+      "role_name": "Fashion",
+      "emoji": "👗",
+      "description": "Discuss fashion, style, and design"
+    },
+    {
+      "role_id": 1460196614495928330,
+      "role_name": "Worldbuilding",
+      "emoji": "🌍",
+      "description": "Share and develop your creative worlds"
+    }
+  ]
+}
