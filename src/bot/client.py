@@ -74,37 +74,110 @@ class RoleBot(commands.Bot):
         self.logger.info(f"Registered commands: {[cmd.name for cmd in self.commands]}")
         self.logger.info(f"Registered slash commands: {[cmd.name for cmd in self.tree.get_commands()]}")
 
-    async def _check_role_message(self):
-        """Check if role message exists and is valid."""
-        role_message = await self.role_manager.get_role_message()
+    async def on_ready(self):
+        """Called when the bot is ready."""
+        self.logger.info(f"✅ Bot logged in as {self.user}")
         
-        if not role_message:
-            self.logger.info("No role message configured. Use !setup_roles to configure.")
-            return
-        
+        # Automatically setup or verify role message
+        await self._setup_role_message()
+    
+    async def _setup_role_message(self):
+        """Automatically setup or verify the role message."""
         try:
-            guild = self.get_guild(self.config.guild_id)
-            if not guild:
-                self.logger.error("Guild not found")
+            role_message_config = await self.role_manager.get_role_message()
+            
+            if not role_message_config or not role_message_config.channel_id:
+                self.logger.info("No channel configured for role message")
                 return
             
-            channel = guild.get_channel(role_message.channel_id)
+            # Get the configured channel
+            channel = self.get_channel(role_message_config.channel_id)
             if not channel:
-                self.logger.warning("Role channel not found")
+                self.logger.error(f"Channel {role_message_config.channel_id} not found")
                 return
             
-            try:
-                message = await channel.fetch_message(role_message.message_id)
-                self.logger.info(f"✅ Role message found in #{channel.name}")
+            guild = channel.guild
+            
+            # Check if message exists and is valid
+            message_exists = False
+            if role_message_config.message_id and role_message_config.message_id != 0:
+                try:
+                    message = await channel.fetch_message(role_message_config.message_id)
+                    message_exists = True
+                    self.logger.info(f"✅ Role message found in #{channel.name}")
+                    
+                    # Ensure all reactions are present
+                    await self._ensure_reactions(message, role_message_config)
+                except discord.NotFound:
+                    self.logger.info("Role message not found, will create a new one")
+                    message_exists = False
+            
+            # Create new message if needed
+            if not message_exists:
+                self.logger.info("Creating new role message...")
                 
-                # Ensure all reactions are present
-                await self._ensure_reactions(message, role_message)
+                # Ensure roles exist
+                for role_config in role_message_config.roles:
+                    if role_config.role_id == 0:
+                        # Find or create the role
+                        role = discord.utils.get(guild.roles, name=role_config.role_name)
+                        if not role:
+                            try:
+                                role = await guild.create_role(
+                                    name=role_config.role_name,
+                                    mentionable=True,
+                                    reason="Created by role bot"
+                                )
+                                self.logger.info(f"Created role: {role_config.role_name}")
+                            except Exception as e:
+                                self.logger.error(f"Failed to create role {role_config.role_name}: {e}")
+                                continue
+                        role_config.role_id = role.id
                 
-            except discord.NotFound:
-                self.logger.warning("Role message not found. It may have been deleted.")
+                # Load message content from markdown file
+                message_file = Path('data/role_message.md')
+                if message_file.exists():
+                    with open(message_file, 'r', encoding='utf-8') as f:
+                        message_content = f.read()
+                else:
+                    message_content = "# 🎭 Role Assignment\n\nReact to this message to get your roles!"
+                
+                # Build role descriptions
+                role_descriptions = []
+                for role_config in role_message_config.roles:
+                    role = guild.get_role(role_config.role_id)
+                    role_descriptions.append(
+                        f"{role_config.emoji} **{role_config.role_name}** - {role_config.description}"
+                    )
+                
+                # Combine message content with role descriptions
+                full_message = message_content + "\n\n" + "\n\n".join(role_descriptions)
+                full_message += "\n\n*Add a reaction to get the role. Remove it to lose the role.*"
+                
+                # Send the message
+                message = await channel.send(full_message)
+                
+                # Add reactions
+                for role_config in role_message_config.roles:
+                    await message.add_reaction(role_config.emoji)
+                
+                # Save the message ID
+                await self.role_manager.set_role_message(
+                    message.id,
+                    channel.id,
+                    role_message_config.roles
+                )
+                
+                self.logger.info(f"✅ Created role message in #{channel.name} (ID: {message.id})")
                 
         except Exception as e:
-            self.logger.error(f"Error checking role message: {e}")
+            self.logger.error(f"Error setting up role message: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+
+    async def _check_role_message(self):
+        """Check if role message exists and is valid (deprecated - now automatic)."""
+        pass
     
     async def _ensure_reactions(self, message: discord.Message, role_message):
         """Ensure all required reactions are on the message."""

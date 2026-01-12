@@ -6,6 +6,7 @@ from discord.ext import commands
 from discord import app_commands
 import logging
 from typing import Optional
+from pathlib import Path
 
 from ...models.role_config import RoleConfig
 
@@ -88,27 +89,29 @@ class RoleCommands(commands.Cog):
             
             role_config.role_id = role.id
         
-        # Create the embed message
-        embed = discord.Embed(
-            title="🎭 Role Assignment",
-            description="React to this message to get roles!\n\n"
-                       "**Available Roles:**",
-            color=discord.Color.blue()
-        )
+        # Load message content from markdown file
+        message_file = Path('data/role_message.md')
+        if message_file.exists():
+            with open(message_file, 'r', encoding='utf-8') as f:
+                message_content = f.read()
+        else:
+            message_content = "# 🎭 Role Assignment\n\nReact to this message to get your roles!"
         
+        # Build role descriptions
+        role_descriptions = []
         for role_config in roles_config:
             role = guild.get_role(role_config.role_id)
-            embed.add_field(
-                name=f"{role_config.emoji} {role_config.role_name}",
-                value=role_config.description,
-                inline=False
+            role_descriptions.append(
+                f"{role_config.emoji} **{role_config.role_name}** - {role_config.description}"
             )
         
-        embed.set_footer(text="Add a reaction to get the role. Remove it to lose the role.")
+        # Combine message content with role descriptions
+        full_message = message_content + "\n\n" + "\n\n".join(role_descriptions)
+        full_message += "\n\n*Add a reaction to get the role. Remove it to lose the role.*"
         
         # Send the message
         try:
-            message = await target_channel.send(embed=embed)
+            message = await target_channel.send(full_message)
             
             # Add reactions
             for role_config in roles_config:
